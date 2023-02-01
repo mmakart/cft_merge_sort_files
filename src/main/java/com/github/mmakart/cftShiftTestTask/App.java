@@ -14,7 +14,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -51,7 +50,8 @@ public class App {
 				processFiles(readers, writer, String.class, str -> str);
 				break;
 			case INTEGER:
-				processFiles(readers, writer, BigInteger.class, str -> new BigInteger(str));
+				processFiles(readers, writer, BigInteger.class,
+						str -> (str == null ? null : new BigInteger(str)));
 				break;
 			default:
 				throw new AssertionError();
@@ -140,7 +140,6 @@ public class App {
 			throw new AssertionError();
 		}
 		
-		// TODO add Integer support
 		List<T> lastLines = new ArrayList<>(Collections.nCopies(readers.size(), null));
 		T lastWritten = null;
 		boolean isMoreLines;
@@ -172,10 +171,11 @@ public class App {
 				}
 			}
 			
+			T toWrite = lastLines.get(index);
 			// ignore wrong order lines
-			if (Objects.compare(lastLines.get(index), lastWritten, checkOrderComparator) >= 0) {
-				writer.println(lastLines.get(index));
-				lastWritten = lastLines.get(index);
+			if (toWrite != null && Objects.compare(toWrite, lastWritten, checkOrderComparator) >= 0) {
+				writer.println(toWrite);
+				lastWritten = toWrite;
 			}
 			lastLines.set(index, null);
 			
