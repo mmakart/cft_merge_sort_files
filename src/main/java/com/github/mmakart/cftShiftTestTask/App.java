@@ -43,10 +43,7 @@ public class App {
 			readers = openInputFiles();
 			writer = openOutputFile();
 
-			int order = pickUpComparingOrder();
-			Predicate<String> isStringValid = str -> !str.matches(".*\\s.*");
-
-			processStringFiles(readers, writer, order, isStringValid);
+			processStringFiles(readers, writer);
 		} finally {
 			for (Reader reader : readers) {
 				try {
@@ -112,10 +109,12 @@ public class App {
 	}
 
 	private static void processStringFiles(List<BufferedReader> readers,
-			PrintWriter writer, int order, Predicate<String> isStringValid) {
+			PrintWriter writer) {
 		
 		Comparator<String> comparator = null;
 		Comparator<String> checkOrderComparator = null;
+		Predicate<String> isStringValid = null;
+		
 		switch (settings.getSortOrder()) {
 		case ASCENDING:
 			comparator = nullsLast(naturalOrder());
@@ -129,6 +128,16 @@ public class App {
 			throw new AssertionError();
 		}
 		
+		switch (settings.getDataType()) {
+		case STRING:
+			isStringValid = str -> !str.matches(".*\\s.*");
+			break;
+		case INTEGER:
+			isStringValid = str -> str.matches("[-+]?\\d+");
+			break;
+		default:
+			throw new AssertionError();
+		}
 		
 		// TODO add Integer support
 		String[] lastLines = new String[readers.size()];
