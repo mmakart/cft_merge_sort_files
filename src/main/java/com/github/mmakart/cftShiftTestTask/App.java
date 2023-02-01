@@ -65,17 +65,6 @@ public class App {
 		return settings;
 	}
 
-	private static int pickUpComparingOrder() {
-		switch (settings.getSortOrder()) {
-		case ASCENDING:
-			return +1;
-		case DESCENDING:
-			return -1;
-		default:
-			throw new AssertionError();
-		}
-	}
-
 	private static List<BufferedReader> openInputFiles() {
 		List<BufferedReader> inputReaders = new ArrayList<>();
 		for (String filename : settings.getInputFilenames()) {
