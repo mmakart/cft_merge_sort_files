@@ -12,11 +12,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.github.mmakart.cftShiftTestTask.state.AppSettings;
@@ -25,7 +28,7 @@ import com.github.mmakart.cftShiftTestTask.state.CommandLineArgumentParser;
 public class App {
 	
 	private static final String usage =
-			"Usage: java App [-a|-d] [-s|-i] <output file> <input files>...\n" +
+			"Usage: java App [-a|-d] {-s|-i} <output file> <input files>...\n" +
 			"    -a    sort in ascending order (not required, default value)\n" +
 			"    -d    sort in descending order (not required)\n" +
 			"    -s    treat and sort input files content as strings\n" +
@@ -43,7 +46,16 @@ public class App {
 			readers = openInputFiles();
 			writer = openOutputFile();
 
-			processStringFiles(readers, writer);
+			switch (settings.getDataType()) {
+			case STRING:
+				processFiles(readers, writer, String.class, str -> str);
+				break;
+			case INTEGER:
+				processFiles(readers, writer, BigInteger.class, str -> new BigInteger(str));
+				break;
+			default:
+				throw new AssertionError();
+			}
 		} finally {
 			for (Reader reader : readers) {
 				try {
@@ -97,11 +109,11 @@ public class App {
 		return outputWriter;
 	}
 
-	private static void processStringFiles(List<BufferedReader> readers,
-			PrintWriter writer) {
+	private static <T extends Comparable<T>> void processFiles(List<BufferedReader> readers,
+			PrintWriter writer, Class<T> type, Function<String, T> transformFunc) {
 		
-		Comparator<String> comparator = null;
-		Comparator<String> checkOrderComparator = null;
+		Comparator<T> comparator = null;
+		Comparator<T> checkOrderComparator = null;
 		Predicate<String> isStringValid = null;
 		
 		switch (settings.getSortOrder()) {
@@ -129,8 +141,8 @@ public class App {
 		}
 		
 		// TODO add Integer support
-		String[] lastLines = new String[readers.size()];
-		String previousPushed = null;
+		List<T> lastLines = new ArrayList<>(Collections.nCopies(readers.size(), null));
+		T lastWritten = null;
 		boolean isMoreLines;
 		
 		do {
@@ -139,7 +151,7 @@ public class App {
 			for (int i = 0; i < readers.size(); i++) {
 				BufferedReader reader = readers.get(i);
 				try {
-					if (lastLines[i] == null && reader.ready()) {
+					if (lastLines.get(i) == null && reader.ready()) {
 						String line = reader.readLine();
 						
 						// ignore invalid lines
@@ -150,9 +162,9 @@ public class App {
 								break;
 							}
 						}
-						lastLines[i] = line;
+						lastLines.set(i, type.cast(transformFunc.apply(line)));
 					}
-					if (Objects.compare(lastLines[i], lastLines[index], comparator) <= 0) {
+					if (Objects.compare(lastLines.get(i), lastLines.get(index), comparator) <= 0) {
 						index = i;
 					}
 				} catch (IOException e) {
@@ -161,13 +173,13 @@ public class App {
 			}
 			
 			// ignore wrong order lines
-			if (Objects.compare(lastLines[index], previousPushed, checkOrderComparator) >= 0) {
-				writer.println(lastLines[index]);
-				previousPushed = lastLines[index];
+			if (Objects.compare(lastLines.get(index), lastWritten, checkOrderComparator) >= 0) {
+				writer.println(lastLines.get(index));
+				lastWritten = lastLines.get(index);
 			}
-			lastLines[index] = null;
+			lastLines.set(index, null);
 			
-			isMoreLines = Arrays.stream(lastLines).anyMatch(Objects::nonNull);
+			isMoreLines = lastLines.stream().anyMatch(Objects::nonNull);
 			
 		} while (isMoreLines);
 	}
