@@ -1,0 +1,7 @@
+Amazon
+Apple
+Google
+Incorrect string
+Microsoft
+Netflix
+
