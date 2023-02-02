@@ -78,6 +78,12 @@ public class App {
 	}
 
 	private static List<BufferedReader> openInputFiles() {
+		if (settings.getInputFilenames().length == 0) {
+			System.err.println("Error: no input files given");
+			System.err.println(usage);
+			System.exit(1);
+		}
+		
 		List<BufferedReader> inputReaders = new ArrayList<>();
 		for (String filename : settings.getInputFilenames()) {
 			try {
