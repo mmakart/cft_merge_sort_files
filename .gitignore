@@ -101,3 +101,5 @@ replay_pid*
 .classpath
 .project
 target/
+
+out*.txt
