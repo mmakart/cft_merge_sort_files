@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -150,6 +151,9 @@ public class App {
 		T lastWritten = null;
 		boolean isMoreLines;
 		
+		// int[], not boolean[] because of stream API
+		int[] isEndOfFile = new int[readers.size()];
+		
 		do {
 			int index = 0;
 			
@@ -168,6 +172,8 @@ public class App {
 							}
 						}
 						lastLines.set(i, type.cast(transformFunc.apply(line)));
+					} else if (!reader.ready()) {
+						isEndOfFile[i] = 1; // true
 					}
 					if (Objects.compare(lastLines.get(i), lastLines.get(index), comparator) <= 0) {
 						index = i;
@@ -185,7 +191,7 @@ public class App {
 			}
 			lastLines.set(index, null);
 			
-			isMoreLines = lastLines.stream().anyMatch(Objects::nonNull);
+			isMoreLines = Arrays.stream(isEndOfFile).anyMatch(i -> i == 0);
 			
 		} while (isMoreLines);
 	}
