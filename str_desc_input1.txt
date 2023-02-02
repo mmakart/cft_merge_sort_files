@@ -4,4 +4,3 @@ Incorrect string
 Google
 Apple
 Amazon
-

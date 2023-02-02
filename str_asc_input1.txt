@@ -4,4 +4,3 @@ Google
 Incorrect string
 Microsoft
 Netflix
-
